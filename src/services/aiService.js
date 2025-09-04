@@ -1,5 +1,12 @@
-// Mock AI service for analyzing tweets
-// In a real implementation, this would connect to OpenAI API
+import OpenAI from 'openai'
+
+// Initialize OpenAI client
+const openai = import.meta.env.VITE_OPENAI_API_KEY 
+  ? new OpenAI({
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true // Note: In production, API calls should go through your backend
+    })
+  : null
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -18,7 +25,56 @@ const credibilityIndicators = {
   negative: ['GUARANTEED', 'EXPLOSIVE', 'MOON', '10000x', 'secret method', 'they don\'t want you to know']
 }
 
-export const analyzeTweet = async (content) => {
+// Real OpenAI-powered tweet analysis
+export const analyzeTweetWithAI = async (content) => {
+  if (!openai) {
+    console.warn('OpenAI not configured, falling back to mock analysis')
+    return analyzeTweetMock(content)
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert content analyst. Analyze the given tweet and return a JSON object with:
+          - sentiment: "positive", "neutral", or "negative"
+          - credibilityScore: number between 0-1 (1 being most credible)
+          - botProbability: number between 0-1 (1 being most likely a bot)
+          
+          Consider these factors:
+          - Credibility: factual claims, sources, balanced language, expertise indicators
+          - Bot detection: excessive emojis, caps, promotional language, repetitive patterns
+          - Sentiment: overall emotional tone of the content
+          
+          Return only valid JSON.`
+        },
+        {
+          role: "user",
+          content: `Analyze this tweet: "${content}"`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 150
+    })
+
+    const result = JSON.parse(completion.choices[0].message.content)
+    
+    // Validate and sanitize the response
+    return {
+      sentiment: ['positive', 'neutral', 'negative'].includes(result.sentiment) ? result.sentiment : 'neutral',
+      credibilityScore: Math.max(0, Math.min(1, parseFloat(result.credibilityScore) || 0.5)),
+      botProbability: Math.max(0, Math.min(1, parseFloat(result.botProbability) || 0.5))
+    }
+  } catch (error) {
+    console.error('OpenAI analysis failed:', error)
+    return analyzeTweetMock(content)
+  }
+}
+
+// Fallback mock analysis (original implementation)
+export const analyzeTweetMock = async (content) => {
   // Simulate API delay
   await delay(100 + Math.random() * 200)
 
@@ -85,3 +141,6 @@ export const analyzeTweet = async (content) => {
     botProbability
   }
 }
+
+// Main export - uses AI if available, falls back to mock
+export const analyzeTweet = analyzeTweetWithAI
