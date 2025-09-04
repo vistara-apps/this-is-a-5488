@@ -1,7 +1,17 @@
 import React from 'react'
-import { Settings, Filter, Shield, Sparkles } from 'lucide-react'
+import { Settings, Filter, Shield, Sparkles, User, LogOut, LogIn } from 'lucide-react'
 
-const AppShell = ({ children, onToggleSettings, showSettings, filteredCount, totalCount }) => {
+const AppShell = ({ 
+  children, 
+  onToggleSettings, 
+  showSettings, 
+  filteredCount, 
+  totalCount,
+  user,
+  isAuthenticated,
+  onSignOut,
+  onSignIn
+}) => {
   return (
     <div className="min-h-screen bg-bg">
       {/* Header */}
@@ -24,6 +34,41 @@ const AppShell = ({ children, onToggleSettings, showSettings, filteredCount, tot
                 <Filter className="w-4 h-4" />
                 <span>{filteredCount}/{totalCount}</span>
               </div>
+
+              {/* User Profile */}
+              {isAuthenticated && user ? (
+                <div className="flex items-center space-x-2">
+                  <img
+                    src={user.avatar_url}
+                    alt={user.display_name || user.username}
+                    className="w-8 h-8 rounded-full border-2 border-accent"
+                  />
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-medium text-text-primary">
+                      {user.display_name || user.username}
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      {user.subscription_tier === 'free' ? 'Free Plan' : 
+                       user.subscription_tier === 'basic' ? 'Basic Plan' : 'Premium Plan'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={onSignOut}
+                    className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface rounded-md transition-colors"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={onSignIn}
+                  className="flex items-center space-x-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded-md transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </button>
+              )}
               
               {/* Settings Button */}
               <button
