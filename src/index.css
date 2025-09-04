@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: hsl(220, 25%, 25%);
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: hsl(220, 25%, 10%);
+    color: hsl(0, 0%, 95%);
+  }
+}
+
+@layer components {
+  .text-display {
+    @apply text-4xl font-bold;
+  }
+  
+  .text-headline {
+    @apply text-2xl font-semibold;
+  }
+  
+  .text-body {
+    @apply text-base font-normal leading-7;
+  }
+}
